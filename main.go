@@ -2,14 +2,16 @@ package main
 
 import (
 	"Bot_Evgenia/bot"
-	"Bot_Evgenia/web"
+	// "Bot_Evgenia/web"
+	"log"
 )
 
-
 func main() {
-	// Запуск Telegram бота в горутине
-	go bot.StartBot()
+	token := "5435221086:AAFtVvXSL4ZJ427yHpCQXkqVnjUz0eHI3C8"
+	bot, err := bot.NewBot(token)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// Запуск веб-сайта
-	web.StartWebServer()
+	bot.Start()
 }

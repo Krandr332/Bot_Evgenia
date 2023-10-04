@@ -1,5 +1,5 @@
 // route.go
-package main
+package web
 
 import (
 	"html/template"
