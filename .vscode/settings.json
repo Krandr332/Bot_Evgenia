@@ -1,0 +1,14 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "evg_bot",
+            "database": "evg_bot",
+            "password": "1",
+            "username": "postgres"
+        }
+    ]
+}
