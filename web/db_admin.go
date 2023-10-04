@@ -68,9 +68,6 @@ ALTER TABLE "public.Posts" ADD CONSTRAINT "Posts_fk0" FOREIGN KEY ("id_admin") R
 
 
 
-ALTER TABLE "public.Channel" ADD COLUMN "id_tg_channel" integer;
-
-
 
 
 
