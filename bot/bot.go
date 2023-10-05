@@ -40,6 +40,7 @@ func (b *Bot) Start() {
 		if update.Message.Text == "/start" {
 			if checkForUserInSystem(fmt.Sprintf("%d", update.Message.From.ID)) > 0 {
 				fmt.Println("ты в системе уже есть")
+				
 			}else{
 				b.handleStart(update.Message.Chat.ID)
 			}
@@ -52,10 +53,10 @@ func (b *Bot) Start() {
 
 // Обработка команды /start
 func (b *Bot) handleStart(chatID int64) {
-	msg := tgbotapi.NewMessage(chatID, "Привет! Нажмите кнопку 'Начать' на клавиатуре ниже:")
+	msg := tgbotapi.NewMessage(chatID, "Доброго времени суток!Вы не зарегестрированны,поэтому давате знакомиться")
 	msg.ReplyMarkup = tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("/start"),
+			tgbotapi.NewKeyboardButton("Зарегестрироваться"),
 		),
 	)
 
