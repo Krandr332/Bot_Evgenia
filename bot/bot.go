@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"gopkg.in/telegram-bot-api.v4"
 )
@@ -14,9 +15,12 @@ type Bot struct {
 
 type UserState struct {
 	State       RegistrationState
-	FullName    string
+	FirstName   string
+	LastName    string
+	MiddleName  string
 	PhoneNumber string
 	Email       string
+	Region      string
 }
 
 type RegistrationState int
@@ -24,6 +28,7 @@ type RegistrationState int
 const (
 	StateStart RegistrationState = iota
 	StateFullName
+	StateRegion
 	StatePhoneNumber
 	StateEmail
 	StateComplete
@@ -87,7 +92,51 @@ func (b *Bot) handleRegistration(message *tgbotapi.Message, userState *UserState
 
 	switch userState.State {
 	case StateFullName:
-		userState.FullName = message.Text
+		parts := strings.Fields(message.Text)
+		if len(parts) == 3 {
+			userState.FirstName = parts[0]
+			userState.LastName = parts[1]
+			userState.MiddleName = parts[2]
+			userState.State = StateRegion
+
+			// Создайте клавиатуру с 9 регионами
+			keyboard := tgbotapi.ReplyKeyboardMarkup{
+				Keyboard: [][]tgbotapi.KeyboardButton{
+					{
+						tgbotapi.NewKeyboardButton("Регион 1"),
+						tgbotapi.NewKeyboardButton("Регион 2"),
+						tgbotapi.NewKeyboardButton("Регион 3"),
+					},
+					{
+						tgbotapi.NewKeyboardButton("Регион 4"),
+						tgbotapi.NewKeyboardButton("Регион 5"),
+						tgbotapi.NewKeyboardButton("Регион 6"),
+					},
+					{
+						tgbotapi.NewKeyboardButton("Регион 7"),
+						tgbotapi.NewKeyboardButton("Регион 8"),
+						tgbotapi.NewKeyboardButton("Регион 9"),
+					},
+				},
+				OneTimeKeyboard: true,
+			}
+
+			msg := tgbotapi.NewMessage(chatID, "Выберите ваш регион:")
+			msg.ReplyMarkup = keyboard
+
+			_, err := b.api.Send(msg)
+			if err != nil {
+				log.Println(err)
+			}
+		} else {
+			msg := tgbotapi.NewMessage(chatID, "Пожалуйста, отправьте ФИО в правильном формате (Ф И О).")
+			_, err := b.api.Send(msg)
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	case StateRegion:
+		userState.Region = message.Text
 		userState.State = StatePhoneNumber
 
 		msg := tgbotapi.NewMessage(chatID, "Отправьте ваш номер телефона.")

@@ -1,74 +1,112 @@
-CREATE TABLE "public.User" (
-	"id" serial NOT NULL,
-	"Name" TEXT NOT NULL,
-	"Surname" TEXT NOT NULL,
-	"Middle_Name" TEXT NOT NULL,
+CREATE TABLE "public.user" (
+	"id_user" integer NOT NULL,
+	"name" TEXT NOT NULL,
+	"surname" TEXT NOT NULL,
+	"middle_name" TEXT NOT NULL,
 	"email" TEXT NOT NULL,
-	"Phone_number" integer NOT NULL,
-	"Region" TEXT NOT NULL,
-	"Registration_date" timestamptz NOT NULL,
+	"phone_number" integer NOT NULL,
+	"region" TEXT NOT NULL,
 	"tg_id" integer NOT NULL,
-	"Date_of_approval" timestamptz NOT NULL,
-	"Who_approved" integer NOT NULL,
-	"id_Channel" integer,
-	"Status_admin" TEXT NOT NULL DEFAULT 'no',
-	"status" integer NOT NULL,
-	"event_id" integer,
-	CONSTRAINT "User_pk" PRIMARY KEY ("id")
+	"status" integer,
+	"Additional_information" integer NOT NULL,
+	"channel" integer,
+	"event_id" integer NOT NULL,
+	CONSTRAINT "user_pk" PRIMARY KEY ("id_user")
 ) WITH (
   OIDS=FALSE
 );
 
 
 
-CREATE TABLE "public.Channel" (
-	"id_Channel" serial NOT NULL,
-	"Region" integer NOT NULL,
-	"Post" integer NOT NULL,
-	"channel_id_tg" integer NOT NULL,
-	CONSTRAINT "Channel_pk" PRIMARY KEY ("id_Channel")
-) WITH (
-  OIDS=FALSE
-);
-
-
-
-CREATE TABLE "public.Posts" (
-	"id_post" serial NOT NULL,
-	"img" bytea NOT NULL,
-	"text" integer NOT NULL,
+CREATE TABLE "public.admin" (
 	"id_admin" integer NOT NULL,
-	"Date_added" timestamptz NOT NULL,
-	"Date_of_publication" timestamptz NOT NULL,
-	CONSTRAINT "Posts_pk" PRIMARY KEY ("id_post")
+	"level" integer NOT NULL,
+	CONSTRAINT "admin_pk" PRIMARY KEY ("id_admin")
 ) WITH (
   OIDS=FALSE
 );
 
 
 
-CREATE TABLE "public.Event" (
-	"id_Event" serial NOT NULL,
-	"Title" TEXT NOT NULL,
+CREATE TABLE "public.channel" (
+	"id_channel" integer NOT NULL,
+	"region" integer NOT NULL,
+	"channel_id_tg" integer NOT NULL,
+	"posts" integer NOT NULL,
+	CONSTRAINT "channel_pk" PRIMARY KEY ("id_channel")
+) WITH (
+  OIDS=FALSE
+);
+
+
+
+CREATE TABLE "public.posts" (
+	"id_post" integer NOT NULL,
+	"img" bytea,
+	"text" integer,
+	"date_added" timestamptz,
+	"date_of_publication" timestamptz,
+	CONSTRAINT "posts_pk" PRIMARY KEY ("id_post")
+) WITH (
+  OIDS=FALSE
+);
+
+
+
+CREATE TABLE "public.event" (
+	"id_event" integer NOT NULL,
+	"title" TEXT NOT NULL,
 	"data" timestamptz NOT NULL,
-	"Description" TEXT NOT NULL,
-	CONSTRAINT "Event_pk" PRIMARY KEY ("id_Event")
+	"description" TEXT NOT NULL,
+	CONSTRAINT "event_pk" PRIMARY KEY ("id_event")
 ) WITH (
   OIDS=FALSE
 );
 
 
 
-ALTER TABLE "public.User" ADD CONSTRAINT "User_fk0" FOREIGN KEY ("id_Channel") REFERENCES "public.Channel"("id_Channel");
-ALTER TABLE "public.User" ADD CONSTRAINT "User_fk1" FOREIGN KEY ("event_id") REFERENCES "public.Event"("id_Event");
+CREATE TABLE "public.Additionally" (
+	"id_additionally" serial NOT NULL,
+	"registration_date" timestamptz NOT NULL,
+	"date_of_approval" timestamptz,
+	"who_approved" integer,
+	"status_admin" TEXT NOT NULL DEFAULT 'no',
+	CONSTRAINT "Additionally_pk" PRIMARY KEY ("id_additionally")
+) WITH (
+  OIDS=FALSE
+);
 
-ALTER TABLE "public.Channel" ADD CONSTRAINT "Channel_fk0" FOREIGN KEY ("Post") REFERENCES "public.Posts"("id_post");
-
-ALTER TABLE "public.Posts" ADD CONSTRAINT "Posts_fk0" FOREIGN KEY ("id_admin") REFERENCES "public.User"("id");
 
 
+CREATE TABLE "public.UserEventRegistration" (
+	"id_registration" serial NOT NULL,
+	"user_id" integer NOT NULL,
+	"event_id" integer NOT NULL,
+	"registration_date" timestamptz NOT NULL,
+	CONSTRAINT "UserEventRegistration_pk" PRIMARY KEY ("id_registration")
+) WITH (
+  OIDS=FALSE
+);
 
-ALTER TABLE "public.Channel" ADD COLUMN "id_tg_channel" integer;
+
+
+ALTER TABLE "public.user" ADD CONSTRAINT "user_fk0" FOREIGN KEY ("status") REFERENCES "public.admin"("id_admin");
+ALTER TABLE "public.user" ADD CONSTRAINT "user_fk1" FOREIGN KEY ("Additional_information") REFERENCES "public.Additionally"("id_additionally");
+ALTER TABLE "public.user" ADD CONSTRAINT "user_fk2" FOREIGN KEY ("channel") REFERENCES "public.channel"("id_channel");
+ALTER TABLE "public.user" ADD CONSTRAINT "user_fk3" FOREIGN KEY ("event_id") REFERENCES "public.UserEventRegistration"("id_registration");
+
+
+ALTER TABLE "public.channel" ADD CONSTRAINT "channel_fk0" FOREIGN KEY ("posts") REFERENCES "public.posts"("id_post");
+
+
+
+
+ALTER TABLE "public.UserEventRegistration" ADD CONSTRAINT "UserEventRegistration_fk0" FOREIGN KEY ("user_id") REFERENCES "public.user"("id_user");
+ALTER TABLE "public.UserEventRegistration" ADD CONSTRAINT "UserEventRegistration_fk1" FOREIGN KEY ("event_id") REFERENCES "public.event"("id_event");
+
+
+
+
 
 
 
