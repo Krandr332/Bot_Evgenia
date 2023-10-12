@@ -20,3 +20,6 @@ import (
 	
 		return count
 	}
+	func registerUserInSystem(tg_id string){
+		
+	}
