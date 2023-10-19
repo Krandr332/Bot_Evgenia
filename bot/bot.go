@@ -58,28 +58,42 @@ func (b *Bot) Start() {
 	}
 
 	for update := range updates {
-		if update.Message == nil {
-			continue
-		}
+        if update.Message == nil {
+            continue
+        }
 
-		chatID := update.Message.Chat.ID
-		userState, ok := b.userStates[chatID]
+        chatID := update.Message.Chat.ID
+        userState, ok := b.userStates[chatID]
 
-		if !ok {
-			userState = &UserState{State: StateStart}
-			b.userStates[chatID] = userState
-		}
+        if !ok {
+            userState = &UserState{State: StateStart}
+            b.userStates[chatID] = userState
+        }
+        tgID := update.Message.From.ID
 
-		if userState.State == StateStart {
-			b.handleStart(chatID, userState)
-		} else {
-			b.handleRegistration(update.Message, userState)
+        if checkForUserInSystem(fmt.Sprintf("%d", update.Message.From.ID)) == 0 {
+			// Проверка на зарегес трированность 
+			if userState.State == StateStart {
+				b.handleStart(chatID, userState)
+			} else {
+				b.handleRegistration(update.Message, userState)
+			}
+        }else{
+			isAdmin, err := checkAdminStatus(tgID)
+        if err != nil {
+            log.Println("Ошибка при проверке admin_status:", err)
+        } else if isAdmin > 0 { // Проверка, является ли пользователь администратором
+
+            // Пользователь - администратор
+        }else{
+			 // Пользователь - не администратор
+			fmt.Println("ВЫ ЗАРЕГАНЫ И МОЖЕТЕ РАБОТЬ")
 		}
-	}
-}
+    }}}
+
 
 func (b *Bot) handleStart(chatID int64, userState *UserState) {
-	if userState.State == StateStart {
+		if userState.State == StateStart {
 		msg := tgbotapi.NewMessage(chatID, "Доброго времени суток! Вы не зарегистрированы, давайте знакомиться. Пожалуйста, отправьте свое ФИО.")
 		_, err := b.api.Send(msg)
 		if err != nil {
@@ -101,7 +115,6 @@ func (b *Bot) handleRegistration(message *tgbotapi.Message, userState *UserState
 			userState.MiddleName = parts[2]
 			userState.State = StateRegion
 
-			// Создайте клавиатуру с 9 регионами
 			keyboard := tgbotapi.ReplyKeyboardMarkup{
 				Keyboard: [][]tgbotapi.KeyboardButton{
 					{

@@ -29,6 +29,9 @@ import (
 	
 		return count
 	}
+	func checkAdminStatus(tg_id int) (int, error) {
+		
+	}
 	
 	func CreateUserAccount(tgID, name, surname, middleName, phoneNumber, region, email string) error {
 		db, err := sql.Open("postgres", "postgres://postgres:1@localhost/evg_bot?sslmode=disable")
