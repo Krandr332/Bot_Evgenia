@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"strconv"
 
 	"gopkg.in/telegram-bot-api.v4"
 )
@@ -15,6 +16,7 @@ type Bot struct {
 
 type UserState struct {
 	State       RegistrationState
+	
 	FirstName   string
 	LastName    string
 	MiddleName  string
@@ -103,19 +105,19 @@ func (b *Bot) handleRegistration(message *tgbotapi.Message, userState *UserState
 			keyboard := tgbotapi.ReplyKeyboardMarkup{
 				Keyboard: [][]tgbotapi.KeyboardButton{
 					{
-						tgbotapi.NewKeyboardButton("Регион 1"),
-						tgbotapi.NewKeyboardButton("Регион 2"),
-						tgbotapi.NewKeyboardButton("Регион 3"),
+						tgbotapi.NewKeyboardButton("Азербайджан"),
+						tgbotapi.NewKeyboardButton("Армения"),
+						tgbotapi.NewKeyboardButton("Грузия"),
 					},
 					{
-						tgbotapi.NewKeyboardButton("Регион 4"),
-						tgbotapi.NewKeyboardButton("Регион 5"),
-						tgbotapi.NewKeyboardButton("Регион 6"),
+						tgbotapi.NewKeyboardButton("Казахстан"),
+						tgbotapi.NewKeyboardButton("Киргизия"),
+						tgbotapi.NewKeyboardButton("Монголия"),
 					},
 					{
-						tgbotapi.NewKeyboardButton("Регион 7"),
-						tgbotapi.NewKeyboardButton("Регион 8"),
-						tgbotapi.NewKeyboardButton("Регион 9"),
+						tgbotapi.NewKeyboardButton("Таджикистан"),
+						tgbotapi.NewKeyboardButton("Туркменистан"),
+						tgbotapi.NewKeyboardButton("Узбекистан"),
 					},
 				},
 				OneTimeKeyboard: true,
@@ -159,9 +161,17 @@ func (b *Bot) handleRegistration(message *tgbotapi.Message, userState *UserState
 
 		msg := tgbotapi.NewMessage(chatID, "Регистрация завершена. Спасибо!")
 		fmt.Println(userState)
-		_, err := b.api.Send(msg)
+		userIDStr := strconv.Itoa(message.From.ID)
+
+		err := CreateUserAccount(userIDStr, userState.FirstName, userState.LastName, userState.MiddleName, userState.PhoneNumber, userState.Region, userState.Email)
 		if err != nil {
 			log.Println(err)
 		}
+
+		_, sendErr := b.api.Send(msg)
+			if sendErr != nil {
+				log.Println(sendErr)
+			}
+
 	}
 }
