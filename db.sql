@@ -7,7 +7,6 @@ CREATE TABLE "public.user" (
 	"phone_number" integer NOT NULL,
 	"region" TEXT NOT NULL,
 	"tg_id" integer NOT NULL,
-	"admin_status" integer NOT NULL DEFAULT '0',
 	"Additional_information" integer NOT NULL,
 	"channel" integer,
 	CONSTRAINT "user_pk" PRIMARY KEY ("id_user")
@@ -60,6 +59,7 @@ CREATE TABLE "public.Additionally" (
 	"date_of_approval" timestamptz,
 	"who_approved" integer,
 	"status" integer,
+	"admin_status" integer NOT NULL,
 	CONSTRAINT "Additionally_pk" PRIMARY KEY ("id_additionally")
 ) WITH (
   OIDS=FALSE
@@ -79,6 +79,17 @@ CREATE TABLE "public.UserEventRegistration" (
 
 
 
+CREATE TABLE "public.Admin" (
+	"id_admin" serial NOT NULL,
+	"level" integer NOT NULL,
+	"description" TEXT NOT NULL,
+	CONSTRAINT "Admin_pk" PRIMARY KEY ("id_admin")
+) WITH (
+  OIDS=FALSE
+);
+
+
+
 ALTER TABLE "public.user" ADD CONSTRAINT "user_fk0" FOREIGN KEY ("Additional_information") REFERENCES "public.Additionally"("id_additionally");
 ALTER TABLE "public.user" ADD CONSTRAINT "user_fk1" FOREIGN KEY ("channel") REFERENCES "public.channel"("id_channel");
 
@@ -86,9 +97,12 @@ ALTER TABLE "public.channel" ADD CONSTRAINT "channel_fk0" FOREIGN KEY ("posts") 
 
 
 
+ALTER TABLE "public.Additionally" ADD CONSTRAINT "Additionally_fk0" FOREIGN KEY ("admin_status") REFERENCES "public.Admin"("id_admin");
 
 ALTER TABLE "public.UserEventRegistration" ADD CONSTRAINT "UserEventRegistration_fk0" FOREIGN KEY ("user_id") REFERENCES "public.user"("id_user");
 ALTER TABLE "public.UserEventRegistration" ADD CONSTRAINT "UserEventRegistration_fk1" FOREIGN KEY ("event_id") REFERENCES "public.event"("id_event");
+
+
 
 
 
