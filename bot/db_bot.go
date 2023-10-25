@@ -41,19 +41,25 @@ import (
 		
 	
 		// Выполняем SQL-запрос для получения статуса админа
-		var isAdmin bool
+		var adminLevel int
+
 		err = db.QueryRow(`
-			SELECT a."admin_status" 
+			SELECT ad."level"
 			FROM "public.user" u
 			JOIN "public.Additionally" a ON u."Additional_information" = a."id_additionally"
 			JOIN "public.Admin" ad ON a."admin_status" = ad."id_admin"
-			WHERE u.tg_id = $1`, tgID).Scan(&isAdmin)
-	
-		if err != nil {
-			return false, err
-		}
-	
-		return isAdmin, nil
+			WHERE u.tg_id = $1`, tgID).Scan(&adminLevel)
+
+			if err != nil {
+				return false, err
+			}
+		
+			fmt.Printf("Admin Level: %d\n", adminLevel)
+		
+			isAdmin := adminLevel > 1
+			return isAdmin, nil
+		
+
 	}
 	
 	
@@ -117,4 +123,55 @@ import (
 	
 		return additionallyID, nil
 	}
+	func getUsersWithStatusZero() ([]string, error) {
+		db, err := sql.Open("postgres", "postgres://postgres:1@localhost/evg_bot?sslmode=disable")
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
 	
+		rows, err := db.Query(`
+			SELECT u."id_user",u."name", u."surname", u."middle_name"
+			FROM "public.user" u
+			JOIN "public.Additionally" a ON u."Additional_information" = a."id_additionally"
+			WHERE a."status" = 0`)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+	
+		users := []string{}
+		for rows.Next() {
+			var id_user ,name, surname, middleName string
+			if err := rows.Scan(&id_user, &name, &surname, &middleName); err != nil {
+				return nil, err
+			}
+			users = append(users, fmt.Sprintf("%s %s %s %s",id_user, name, surname, middleName))
+		}
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
+	
+		return users, nil
+	}
+	func updateUserStatusToApproved(userID int) error {
+		db, err := sql.Open("postgres", "postgres://postgres:1@localhost/evg_bot?sslmode=disable")
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+	
+		// Выполняем SQL-запрос для обновления статуса
+		_, err = db.Exec(`
+			UPDATE "public.Additionally" a
+			SET "status" = 1
+			FROM "public.user" u
+			WHERE u."id_user" = $1 AND u."Additional_information" = a."id_additionally"`,
+			userID)
+	
+		if err != nil {
+			return err
+		}
+	
+		return nil
+	}

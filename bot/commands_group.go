@@ -58,7 +58,7 @@ func (b *Bot) handleGroupHelp(chatID int64) {
     }
 }
 
-func (b *Bot) handleUnknownCommand(chatID int64) {
+func (b *Bot) handleGroupUnknownCommand(chatID int64) {
     // Обработка неизвестных команд из группового чата
     // Пример: Отправить сообщение о неизвестной команде
     msg := tgbotapi.NewMessage(chatID, "Неизвестная команда. Используйте /help для получения справки.")

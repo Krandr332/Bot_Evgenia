@@ -1,3 +1,4 @@
+//commands_solo.go
 package bot
 
 import (
@@ -105,17 +106,158 @@ case StateEmail:
 }
 }
 
-
 func (b *Bot) handleSoloCommand(message *tgbotapi.Message) {
-    // Обработка команд из группового чата
-    switch message.Command() {
-    case "help":
-        // Обработка команды /start из группового чата
-        b.handleGroupStart(message.Chat.ID)
+	if message.IsCommand() {
+		parts := strings.Fields(message.Text)
+		if len(parts) >= 2 && parts[0] == "/approve" {
+			// Получите значение "id" из parts[1] и обработайте его
+			id := parts[1]
+			b.handleApproveCommand(message.Chat.ID, id)
+			//////////////////////////// вызов функции для отпрвки данному юзеру смс с ссылкой на чат
+			
+		} else if parts[0] == "/help" {
+			b.sendActionsKeyboard(message.Chat.ID)
 
-    default:
-        // Обработка неизвестных команд
-        b.handleUnknownCommand(message.Chat.ID)
-    
+			// Отправляем сообщение с командами
+			helpMessage := "Список доступных команд:\n" +
+				"/approve [ID] - одобрить пользователя\n" +
+				"/help - отобразить этот список команд"
+			msg := tgbotapi.NewMessage(message.Chat.ID, helpMessage)
+			_, err := b.api.Send(msg)
+			if err != nil {
+				log.Println(err)
+			}
+		}else if {
+			
+		} else {
+			b.handleUnknownCommand(message.Chat.ID)
+		}
+	} else {
+		// Обработка обычных текстовых сообщений
+		b.handleRegularMessage(message)
+	}
+}
+
+func (b *Bot) handleApproveCommand(chatID int64, id string) {
+    userID, err := strconv.Atoi(id)
+    if err != nil {
+        // Обработка ошибки, если id не может быть преобразовано в int
+        errorMessage := "Некорректный ID пользователя."
+        msg := tgbotapi.NewMessage(chatID, errorMessage)
+        _, err := b.api.Send(msg)
+        if err != nil {
+            log.Println(err)
+        }
+        return
     }
+
+    // Вызываем функцию для обновления статуса
+    err = updateUserStatusToApproved(userID)
+    if err != nil {
+        // Обработка ошибки, например, отправка сообщения об ошибке
+        errorMessage := "Произошла ошибка при обновлении статуса пользователя."
+        msg := tgbotapi.NewMessage(chatID, errorMessage)
+        _, err := b.api.Send(msg)
+        if err != nil {
+            log.Println(err)
+        }
+        return
+    }
+
+    // Отправляем подтверждение пользователю
+    confirmationMessage := "Статус пользователя с ID " + id + " был успешно изменен на одобренный."
+    msg := tgbotapi.NewMessage(chatID, confirmationMessage)
+    _, err = b.api.Send(msg)
+    if err != nil {
+        log.Println(err)
+    }
+}
+
+func (b *Bot) handleRegularMessage(message *tgbotapi.Message) {
+	chatID := message.Chat.ID
+
+	// Обработка обычных текстовых сообщений
+	switch message.Text {
+	case "Одобрить нового пользователя":
+		users, err := getUsersWithStatusZero()
+    if err != nil {
+        // Обработка ошибки, например, отправка сообщения об ошибке
+        errorMessage := "Произошла ошибка при запросе данных из базы данных."
+        msg := tgbotapi.NewMessage(chatID, errorMessage)
+        _, err := b.api.Send(msg)
+        if err != nil {
+            log.Println(err)
+        }
+        return
+    }
+
+    if len(users) == 0 {
+        msg := tgbotapi.NewMessage(chatID, "Нет новых пользователей для одобрения.")
+        _, err := b.api.Send(msg)
+        if err != nil {
+            log.Println(err)
+        }
+        return
+    }
+
+    // Отправляем список пользователей боту
+    userListMessage := "Список пользователей для одобрения:\n"
+    for _, user := range users {
+        userListMessage += user + "\n"
+    }
+    msg := tgbotapi.NewMessage(chatID, userListMessage)
+    _, err = b.api.Send(msg)
+    if err != nil {
+        log.Println(err)
+    }
+
+	case "добавить пост":
+		msg := tgbotapi.NewMessage(chatID, "До свидания! Если у вас возникнут вопросы, не стесняйтесь спрашивать.")
+		_, err := b.api.Send(msg)
+		if err != nil {
+			log.Println(err)
+		}
+	default:
+		// Обработка других обычных текстовых сообщений
+		msg := tgbotapi.NewMessage(chatID, "Я не понимаю вашего сообщения.")
+		_, err := b.api.Send(msg)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+}
+
+func (b *Bot) sendActionsKeyboard(chatID int64) {
+	keyboard := createActionsKeyboard()
+
+	msg := tgbotapi.NewMessage(chatID, "Выберите действие:")
+	msg.ReplyMarkup = keyboard
+
+	_, err := b.api.Send(msg)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func (b *Bot) handleUnknownCommand(chatID int64) {
+	msg := tgbotapi.NewMessage(chatID, "Неизвестная команда. Используйте /help для получения помощи.")
+	_, err := b.api.Send(msg)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func createActionsKeyboard() tgbotapi.ReplyKeyboardMarkup {
+	keyboard := tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("Одобрить нового пользователя"),
+			tgbotapi.NewKeyboardButton("добавить пост"),
+		),
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton("проверить"),
+			tgbotapi.NewKeyboardButton("Действие 4"),
+		),
+	)
+
+	return keyboard
 }
