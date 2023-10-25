@@ -1,3 +1,5 @@
+// dbot.go
+
 package bot
 
 import (
@@ -72,7 +74,7 @@ func (b *Bot) Start() {
         tgID := update.Message.From.ID
 
         if checkForUserInSystem(fmt.Sprintf("%d", update.Message.From.ID)) == 0 {
-			// Проверка на зарегес трированность 
+			// Проверка на зарегестрированность 
 			if userState.State == StateStart {
 				b.handleStart(chatID, userState)
 			} else {
@@ -80,15 +82,15 @@ func (b *Bot) Start() {
 			}
         }else{
 			isAdmin, err := checkAdminStatus(tgID)
-        if err != nil {
-            log.Println("Ошибка при проверке admin_status:", err)
-        } else if isAdmin > 0 { // Проверка, является ли пользователь администратором
-
-            // Пользователь - администратор
-        }else{
-			 // Пользователь - не администратор
-			fmt.Println("ВЫ ЗАРЕГАНЫ И МОЖЕТЕ РАБОТЬ")
-		}
+			if err != nil {
+				log.Println("Ошибка при проверке admin_status:", err)
+			} else if isAdmin {
+				// Пользователь - администратор\
+				fmt.Println	("Пользователь админ")
+			} else {
+				// Пользователь - не администратор
+				fmt.Println("ВЫ ЗАРЕГАНЫ И МОЖЕТЕ РАБОТАТЬ")
+			}
     }}}
 
 

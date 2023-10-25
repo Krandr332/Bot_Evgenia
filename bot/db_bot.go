@@ -1,3 +1,4 @@
+// db_bot.go
 package bot
 import (
 	"database/sql"
@@ -14,7 +15,7 @@ import (
 	}
 	
 	func checkForUserInSystem(tg_id string) int {
-		sqlRequest := `SELECT COUNT(*) FROM "public.User" WHERE tg_id = $1;`
+		sqlRequest := `SELECT COUNT(*) FROM "public.user" WHERE tg_id = $1;`
 		db, err := sql.Open("postgres", "postgres://postgres:1@localhost/evg_bot?sslmode=disable")
 		if err != nil {
 			panic(err.Error())
@@ -29,9 +30,34 @@ import (
 	
 		return count
 	}
-	func checkAdminStatus(tg_id int) (int, error) {
+	func checkAdminStatus(tgID int) (bool, error) {
+		// Подключение к базе данных
+		db, err := sql.Open("postgres", "postgres://postgres:1@localhost/evg_bot?sslmode=disable")
+		if err != nil {
+			return false, err
+		}
+		defer db.Close()
+	
 		
+	
+		// Выполняем SQL-запрос для получения статуса админа
+		var isAdmin bool
+		err = db.QueryRow(`
+			SELECT a."admin_status" 
+			FROM "public.user" u
+			JOIN "public.Additionally" a ON u."Additional_information" = a."id_additionally"
+			JOIN "public.Admin" ad ON a."admin_status" = ad."id_admin"
+			WHERE u.tg_id = $1`, tgID).Scan(&isAdmin)
+	
+		if err != nil {
+			return false, err
+		}
+	
+		return isAdmin, nil
 	}
+	
+	
+	
 	
 	func CreateUserAccount(tgID, name, surname, middleName, phoneNumber, region, email string) error {
 		db, err := sql.Open("postgres", "postgres://postgres:1@localhost/evg_bot?sslmode=disable")
