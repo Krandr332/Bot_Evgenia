@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2f964215-cd5d-4cca-87ce-d77644e63ae9" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/bot/bot.go" beforeDir="false" afterPath="$PROJECT_DIR$/bot/bot.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot/commands_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/bot/commands_group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot/commands_solo.go" beforeDir="false" afterPath="$PROJECT_DIR$/bot/commands_solo.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot/db_bot.go" beforeDir="false" afterPath="$PROJECT_DIR$/bot/db_bot.go" afterDir="false" />
-    </list>
+    <list default="true" id="2f964215-cd5d-4cca-87ce-d77644e63ae9" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
