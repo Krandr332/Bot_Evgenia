@@ -4,6 +4,7 @@ package bot
 import (
 	"log"
     "gopkg.in/telegram-bot-api.v4"
+	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"strings"
 	"strconv"
 	"fmt"
@@ -127,8 +128,7 @@ func (b *Bot) handleSoloCommand(message *tgbotapi.Message) {
 			if err != nil {
 				log.Println(err)
 			}
-		}else if {
-			
+		
 		} else {
 			b.handleUnknownCommand(message.Chat.ID)
 		}
@@ -137,9 +137,38 @@ func (b *Bot) handleSoloCommand(message *tgbotapi.Message) {
 		b.handleRegularMessage(message)
 	}
 }
+func (b *Bot) createAdresChata(userID int, chatID int64) {
+    // Получить статус пользователя из базы данных
+    status, err := getStatusByTgID(userID)
+    if err != nil {
+        log.Println("Ошибка при получении статуса пользователя из базы данных:", err)
+        return
+    }
+
+    if status != 1 { // Проверьте значение статуса в соответствии с вашими требованиями
+        log.Println("Пользователь не имеет нужного статуса")
+        return
+    }
+
+    // Создать приглашение в чат
+    chatInviteLink, err := b.api.CreateChatInviteLink(chatID)
+    if err != nil {
+        log.Println("Ошибка при создании приглашения:", err)
+        return
+    }
+
+    // Отправить приглашение пользователю
+    messageText := "Пожалуйста, используйте следующее приглашение для доступа к каналу: " + chatInviteLink.InviteLink
+    msg := tgbotapi.NewMessage(chatID, messageText)
+    _, err = b.api.Send(msg)
+    if err != nil {
+        log.Println(err)
+    }
+}
 
 func (b *Bot) handleApproveCommand(chatID int64, id string) {
     userID, err := strconv.Atoi(id)
+	
     if err != nil {
         // Обработка ошибки, если id не может быть преобразовано в int
         errorMessage := "Некорректный ID пользователя."

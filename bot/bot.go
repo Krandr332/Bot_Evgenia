@@ -95,7 +95,7 @@ func (b *Bot) Start() {
                 isAdmin, err := checkAdminStatus(tgID)
                 if err != nil {
                     log.Println("Ошибка при проверке admin_status:", err)
-                } else if isAdmin  {
+                } else if isAdmin            {
                     // Пользователь - администратор
                     fmt.Println("Пользователь админ")
                     b.handleSoloCommand(update.Message)

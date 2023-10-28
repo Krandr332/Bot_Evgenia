@@ -13,6 +13,29 @@ import (
 		WhoApproved     int
 		StatusAdmin     string
 	}
+	func getStatusByTgID(tgID int) (int, error) {
+		// Подключение к базе данных
+		db, err := sql.Open("postgres", "postgres://postgres:1@localhost/evg_bot?sslmode=disable")
+		if err != nil {
+			return 0, err
+		}
+		defer db.Close()
+	
+		var status int
+	
+		// Выполняем SQL-запрос для получения статуса из таблицы Additionally
+		err = db.QueryRow(`
+			SELECT a."status"
+			FROM "public.user" u
+			JOIN "public.Additionally" a ON u."Additional_information" = a."id_additionally"
+			WHERE u.tg_id = $1`, tgID).Scan(&status)
+	
+		if err != nil {
+			return 0, err
+		}
+	
+		return status, nil
+	}
 	
 	func checkForUserInSystem(tg_id string) int {
 		sqlRequest := `SELECT COUNT(*) FROM "public.user" WHERE tg_id = $1;`
