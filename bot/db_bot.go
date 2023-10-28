@@ -7,6 +7,13 @@ import (
 	"log"
 		_ "github.com/lib/pq"
 	)
+	
+type ChannelData struct {
+    Region        string
+    ChannelIDTG   int
+    Address       string
+}
+
 	type AdditionallyData struct {
 		RegistrationDate time.Time
 		DateOfApproval  time.Time
@@ -198,3 +205,63 @@ import (
 	
 		return nil
 	}
+	func AddChannelToDB(channelData ChannelData) error {
+		db, err := sql.Open("postgres", "postgres://postgres:1@localhost/evg_bot?sslmode=disable")
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+	
+		// Вставка данных о канале в таблицу "public.channel"
+		_, err = db.Exec(`
+			INSERT INTO "public.channel" (region, channel_id_tg, address)
+			VALUES ($1, $2, $3)`,
+			channelData.Region, channelData.ChannelIDTG, channelData.Address)
+	
+		if err != nil {
+			return err
+		}
+	
+		
+	
+		return nil
+	}
+	func AddPost(region string, img []byte, text string, dateAdded time.Time, dateOfPublication time.Time) error {
+		db, err := sql.Open("postgres", "postgres://postgres:1@localhost/evg_bot?sslmode=disable")
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+	
+		// Выполняем SQL-запрос для получения channel_id по заданному region
+		var channelID int
+		err = db.QueryRow(`
+			SELECT "id_channel"
+			FROM "public.channel"
+			WHERE "region" = $1`, region).Scan(&channelID)
+	
+		if err != nil {
+			return err
+		}
+	
+		// Вставка данных о посте в таблицу "public.posts" с определенным channelID
+		_, err = db.Exec(`
+			INSERT INTO "public.posts" (channel_id, img, text, date_added, date_of_publication)
+			VALUES ($1, $2, $3, $4, $5)`,
+			channelID, img, text, dateAdded, dateOfPublication)
+	
+		if err != nil {
+			return err
+		}
+	
+		log.Println("Пост успешно добавлен")
+	
+		return nil
+	}
+	
+	
+	
+	
+	
+	
+	

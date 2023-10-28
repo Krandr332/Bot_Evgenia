@@ -67,3 +67,4 @@ func (b *Bot) handleGroupUnknownCommand(chatID int64) {
         log.Println("Ошибка при отправке сообщения:", err)
     }
 }
+

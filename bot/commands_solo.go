@@ -4,10 +4,10 @@ package bot
 import (
 	"log"
     "gopkg.in/telegram-bot-api.v4"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"strings"
 	"strconv"
 	"fmt"
+	"time"
 )
 
 func (b *Bot) handleStart(chatID int64, userState *UserState) {
@@ -114,57 +114,93 @@ func (b *Bot) handleSoloCommand(message *tgbotapi.Message) {
 			// Получите значение "id" из parts[1] и обработайте его
 			id := parts[1]
 			b.handleApproveCommand(message.Chat.ID, id)
-			//////////////////////////// вызов функции для отпрвки данному юзеру смс с ссылкой на чат
-			
+			// Вызов функции для отправки данному пользователю SMS с ссылкой на чат
 		} else if parts[0] == "/help" {
 			b.sendActionsKeyboard(message.Chat.ID)
-
 			// Отправляем сообщение с командами
 			helpMessage := "Список доступных команд:\n" +
+				"/addchannel [Регион] [ID канала] [Адрес] - добавить канал\n" +
 				"/approve [ID] - одобрить пользователя\n" +
+				"/addposts [region] [img] [text] [dateAdded] [dateOfPublication] - добавить пост"+
 				"/help - отобразить этот список команд"
 			msg := tgbotapi.NewMessage(message.Chat.ID, helpMessage)
 			_, err := b.api.Send(msg)
 			if err != nil {
 				log.Println(err)
 			}
-		
-		} else {
-			b.handleUnknownCommand(message.Chat.ID)
+		} else if len(parts) >= 4 && parts[0] == "/addchannel" {
+			// Обработка команды для добавления канала
+			// ...
+		} else if len(parts) >= 5 && parts[0] == "/addposts" {
+			// Получите значения channelID, img, text, dateAdded и dateOfPublication из parts[1], parts[2], parts[3], parts[4] и parts[5:]
+			region := parts[1]
+				if len(parts) < 2 {
+					// Обработка ошибки, если параметры отсутствуют
+					errorMsg := "Ошибка: недостаточно параметров для команды /addposts."
+					msg := tgbotapi.NewMessage(message.Chat.ID, errorMsg)
+					_, err := b.api.Send(msg)
+					if err != nil {
+						log.Println(err)
+					}
+					return
+}
+			
+			var img []byte
+			text := ""
+			// Преобразуйте parts[4] в формат времени (time.Time) для даты добавления
+			dateAdded, err := time.Parse("2006-01-02", parts[4])
+			if err != nil {
+				// Обработка ошибки, если дата не может быть преобразована
+				errorMsg := "Ошибка: неверный формат даты добавления (ожидается: YYYY-MM-DD)."
+				msg := tgbotapi.NewMessage(message.Chat.ID, errorMsg)
+				_, err := b.api.Send(msg)
+				if err != nil {
+					log.Println(err)
+				}
+				return
+			}
+			// Преобразуйте parts[5] в формат времени (time.Time) для даты публикации
+			dateOfPublication, err := time.Parse("2006-01-02", parts[5])
+			if err != nil {
+				// Обработка ошибки, если дата не может быть преобразована
+				errorMsg := "Ошибка: неверный формат даты публикации (ожидается: YYYY-MM-DD)."
+				msg := tgbotapi.NewMessage(message.Chat.ID, errorMsg)
+				_, err := b.api.Send(msg)
+				if err != nil {
+					log.Println(err)
+				}
+				return
+			}
+			if len(parts) > 2 {
+				img = []byte(parts[2])
+			}
+			if len(parts) > 3 {
+				text = parts[3]
+			}
+			// Вызов функции AddPost с полученными параметрами, включая channelID
+			err = AddPost(region, img, text, dateAdded, dateOfPublication)
+			if err != nil {
+				// Обработка ошибки, отправка сообщения об ошибке и т. д.
+				errorMsg := "Произошла ошибка при добавлении поста в базу данных."
+				msg := tgbotapi.NewMessage(message.Chat.ID, errorMsg)
+				_, err := b.api.Send(msg)
+				if err != nil {
+					log.Println(err)
+				}
+			} else {
+				// Отправьте подтверждение успешного добавления поста
+				successMsg := "Пост успешно добавлен в базу данных."
+				msg := tgbotapi.NewMessage(message.Chat.ID, successMsg)
+				_, err := b.api.Send(msg)
+				if err != nil {
+					log.Println(err)
+				}
+			}
 		}
-	} else {
-		// Обработка обычных текстовых сообщений
-		b.handleRegularMessage(message)
 	}
 }
-func (b *Bot) createAdresChata(userID int, chatID int64) {
-    // Получить статус пользователя из базы данных
-    status, err := getStatusByTgID(userID)
-    if err != nil {
-        log.Println("Ошибка при получении статуса пользователя из базы данных:", err)
-        return
-    }
 
-    if status != 1 { // Проверьте значение статуса в соответствии с вашими требованиями
-        log.Println("Пользователь не имеет нужного статуса")
-        return
-    }
 
-    // Создать приглашение в чат
-    chatInviteLink, err := b.api.CreateChatInviteLink(chatID)
-    if err != nil {
-        log.Println("Ошибка при создании приглашения:", err)
-        return
-    }
-
-    // Отправить приглашение пользователю
-    messageText := "Пожалуйста, используйте следующее приглашение для доступа к каналу: " + chatInviteLink.InviteLink
-    msg := tgbotapi.NewMessage(chatID, messageText)
-    _, err = b.api.Send(msg)
-    if err != nil {
-        log.Println(err)
-    }
-}
 
 func (b *Bot) handleApproveCommand(chatID int64, id string) {
     userID, err := strconv.Atoi(id)
@@ -200,6 +236,7 @@ func (b *Bot) handleApproveCommand(chatID int64, id string) {
     if err != nil {
         log.Println(err)
     }
+
 }
 
 func (b *Bot) handleRegularMessage(message *tgbotapi.Message) {
