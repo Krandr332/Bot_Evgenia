@@ -26,7 +26,7 @@
 	OIDS=FALSE
 	);
 
-
+	
 
 	CREATE TABLE "public.posts" (
 		"id_post" serial NOT NULL,

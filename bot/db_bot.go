@@ -261,6 +261,43 @@ type ChannelData struct {
 	
 	
 	
+	func (b *Bot) getChannelsList() ([]string, error) {
+		db, err := sql.Open("postgres", "postgres://postgres:1@localhost/evg_bot?sslmode=disable")
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	
+		rows, err := db.Query(`
+			SELECT "id_channel", "region"
+			FROM "public.channel"
+		`)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+	
+		channels := []string{}
+		for rows.Next() {
+			var idChannel int
+			var region string	
+			if err := rows.Scan(&idChannel, &region); err != nil {
+				fmt.Println("2")
+
+				return nil, err
+			}
+			channels = append(channels, fmt.Sprintf("ID канала: %d, Регион: %s", idChannel, region))
+			fmt.Println("3")
+		}
+	
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
+	
+		return channels, nil
+	}
+	
+	
 	
 	
 	

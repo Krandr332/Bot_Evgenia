@@ -7,7 +7,6 @@ import (
 	"strings"
 	"strconv"
 	"fmt"
-	"time"
 )
 
 func (b *Bot) handleStart(chatID int64, userState *UserState) {
@@ -111,17 +110,18 @@ func (b *Bot) handleSoloCommand(message *tgbotapi.Message) {
 	if message.IsCommand() {
 		parts := strings.Fields(message.Text)
 		if len(parts) >= 2 && parts[0] == "/approve" {
-			// Получите значение "id" из parts[1] и обработайте его
+			// Handle the "/approve" command
 			id := parts[1]
 			b.handleApproveCommand(message.Chat.ID, id)
-			// Вызов функции для отправки данному пользователю SMS с ссылкой на чат
+			// Send an SMS link to the user
 		} else if parts[0] == "/help" {
+			// Send a help message
 			b.sendActionsKeyboard(message.Chat.ID)
-			// Отправляем сообщение с командами
 			helpMessage := "Список доступных команд:\n" +
 				"/addchannel [Регион] [ID канала] [Адрес] - добавить канал\n" +
 				"/approve [ID] - одобрить пользователя\n" +
-				"/addposts [region] [img] [text] [dateAdded] [dateOfPublication] - добавить пост"+
+				"/addposts [region] [img] [text] [dateAdded] [dateOfPublication] - добавить пост\n" +
+				"/showchannel - показать список каналов\n" +
 				"/help - отобразить этот список команд"
 			msg := tgbotapi.NewMessage(message.Chat.ID, helpMessage)
 			_, err := b.api.Send(msg)
@@ -129,29 +129,16 @@ func (b *Bot) handleSoloCommand(message *tgbotapi.Message) {
 				log.Println(err)
 			}
 		} else if len(parts) >= 4 && parts[0] == "/addchannel" {
-			// Обработка команды для добавления канала
-			// ...
+			// Handle the "/addchannel" command
+			b.handleAddChannelCommand(message)
 		} else if len(parts) >= 5 && parts[0] == "/addposts" {
-			// Получите значения channelID, img, text, dateAdded и dateOfPublication из parts[1], parts[2], parts[3], parts[4] и parts[5:]
-			region := parts[1]
-				if len(parts) < 2 {
-					// Обработка ошибки, если параметры отсутствуют
-					errorMsg := "Ошибка: недостаточно параметров для команды /addposts."
-					msg := tgbotapi.NewMessage(message.Chat.ID, errorMsg)
-					_, err := b.api.Send(msg)
-					if err != nil {
-						log.Println(err)
-					}
-					return
-}
-			
-			var img []byte
-			text := ""
-			// Преобразуйте parts[4] в формат времени (time.Time) для даты добавления
-			dateAdded, err := time.Parse("2006-01-02", parts[4])
+			// Handle the "/addposts" command
+			// ...
+		} else if parts[0] == "/showchannel" {
+			// Handle the "/showchannel" command
+			channels, err := b.getChannelsList()
 			if err != nil {
-				// Обработка ошибки, если дата не может быть преобразована
-				errorMsg := "Ошибка: неверный формат даты добавления (ожидается: YYYY-MM-DD)."
+				errorMsg := "Произошла ошибка при получении списка каналов."
 				msg := tgbotapi.NewMessage(message.Chat.ID, errorMsg)
 				_, err := b.api.Send(msg)
 				if err != nil {
@@ -159,42 +146,12 @@ func (b *Bot) handleSoloCommand(message *tgbotapi.Message) {
 				}
 				return
 			}
-			// Преобразуйте parts[5] в формат времени (time.Time) для даты публикации
-			dateOfPublication, err := time.Parse("2006-01-02", parts[5])
+			// Send the list of channels to the user
+			channelsMessage := "Список каналов:\n" + strings.Join(channels, "\n")
+			msg := tgbotapi.NewMessage(message.Chat.ID, channelsMessage)
+			_, err = b.api.Send(msg)
 			if err != nil {
-				// Обработка ошибки, если дата не может быть преобразована
-				errorMsg := "Ошибка: неверный формат даты публикации (ожидается: YYYY-MM-DD)."
-				msg := tgbotapi.NewMessage(message.Chat.ID, errorMsg)
-				_, err := b.api.Send(msg)
-				if err != nil {
-					log.Println(err)
-				}
-				return
-			}
-			if len(parts) > 2 {
-				img = []byte(parts[2])
-			}
-			if len(parts) > 3 {
-				text = parts[3]
-			}
-			// Вызов функции AddPost с полученными параметрами, включая channelID
-			err = AddPost(region, img, text, dateAdded, dateOfPublication)
-			if err != nil {
-				// Обработка ошибки, отправка сообщения об ошибке и т. д.
-				errorMsg := "Произошла ошибка при добавлении поста в базу данных."
-				msg := tgbotapi.NewMessage(message.Chat.ID, errorMsg)
-				_, err := b.api.Send(msg)
-				if err != nil {
-					log.Println(err)
-				}
-			} else {
-				// Отправьте подтверждение успешного добавления поста
-				successMsg := "Пост успешно добавлен в базу данных."
-				msg := tgbotapi.NewMessage(message.Chat.ID, successMsg)
-				_, err := b.api.Send(msg)
-				if err != nil {
-					log.Println(err)
-				}
+				log.Println(err)
 			}
 		}
 	}
@@ -326,4 +283,49 @@ func createActionsKeyboard() tgbotapi.ReplyKeyboardMarkup {
 	)
 
 	return keyboard
+}
+func (b *Bot) handleAddChannelCommand(message *tgbotapi.Message) {
+    if message.IsCommand() {
+        parts := strings.Fields(message.Text)
+        if len(parts) >= 4 && parts[0] == "/addchannel" {
+            region := parts[1]
+            channelID, err := strconv.Atoi(parts[2])
+            if err != nil {
+                // Обработка ошибки, если channelID не может быть преобразовано в int
+                errorMsg := "Ошибка: неверный формат channelID."
+                msg := tgbotapi.NewMessage(message.Chat.ID, errorMsg)
+                _, err := b.api.Send(msg)
+                if err != nil {
+                    log.Println(err)
+                }
+                return
+            }
+            address := parts[3]
+
+            channelData := ChannelData{
+                Region:      region,
+                ChannelIDTG: channelID,
+                Address:     address,
+            }
+
+            err = AddChannelToDB(channelData)
+            if err != nil {
+                // Обработка ошибки, отправка сообщения об ошибке и т. д.
+                errorMsg := "Произошла ошибка при добавлении канала в базу данных."
+                msg := tgbotapi.NewMessage(message.Chat.ID, errorMsg)
+                _, err := b.api.Send(msg)
+                if err != nil {
+                    log.Println(err)
+                }
+            } else {
+                // Отправьте подтверждение успешного добавления канала
+                successMsg := "Канал успешно добавлен в базу данных."
+                msg := tgbotapi.NewMessage(message.Chat.ID, successMsg)
+                _, err := b.api.Send(msg)
+                if err != nil {
+                    log.Println(err)
+                }
+            }
+        }
+    }
 }
